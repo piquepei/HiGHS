@@ -12,7 +12,6 @@
 
 #include <cmath>
 #include <iostream>
-#include "lp_solver.h"
 
 using Int = ipxint;
 

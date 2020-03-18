@@ -1,75 +1,4 @@
 # Define library.
-include_directories(ipm/ipx/src)
-include_directories(ipm/ipx/include)
-include_directories(ipm/basiclu/src)
-include_directories(ipm/basiclu/include)
-
-if (IPX_ON)
-set(basiclu_sources
-    ipm/basiclu/src/basiclu_factorize.c
-    ipm/basiclu/src/basiclu_solve_dense.c
-    ipm/basiclu/src/lu_build_factors.c
-    ipm/basiclu/src/lu_factorize_bump.c
-    ipm/basiclu/src/lu_initialize.c
-    ipm/basiclu/src/lu_markowitz.c
-    ipm/basiclu/src/lu_setup_bump.c
-    ipm/basiclu/src/lu_solve_sparse.c
-    ipm/basiclu/src/basiclu_get_factors.c
-    ipm/basiclu/src/basiclu_solve_for_update.c
-    ipm/basiclu/src/lu_condest.c
-    ipm/basiclu/src/lu_file.c
-    ipm/basiclu/src/lu_internal.c
-    ipm/basiclu/src/lu_matrix_norm.c
-    ipm/basiclu/src/lu_singletons.c
-    ipm/basiclu/src/lu_solve_symbolic.c
-    ipm/basiclu/src/lu_update.c
-    ipm/basiclu/src/basiclu_initialize.c
-    ipm/basiclu/src/basiclu_solve_sparse.c
-    ipm/basiclu/src/lu_pivot.c
-    ipm/basiclu/src/lu_solve_dense.c
-    ipm/basiclu/src/lu_solve_triangular.c
-    ipm/basiclu/src/basiclu_object.c
-    ipm/basiclu/src/basiclu_update.c
-    ipm/basiclu/src/lu_dfs.c
-    ipm/basiclu/src/lu_garbage_perm.c
-    ipm/basiclu/src/lu_residual_test.c
-    ipm/basiclu/src/lu_solve_for_update.c
-    ipm/basiclu/src/lu_timer.c)
-
-set(ipx_sources
-    ipm/ipx/src/basiclu_kernel.cc
-    ipm/ipx/src/basiclu_wrapper.cc
-    ipm/ipx/src/basis.cc
-    ipm/ipx/src/conjugate_residuals.cc
-    ipm/ipx/src/control.cc
-    ipm/ipx/src/crossover.cc
-    ipm/ipx/src/diagonal_precond.cc
-    ipm/ipx/src/forrest_tomlin.cc
-    ipm/ipx/src/guess_basis.cc
-    ipm/ipx/src/indexed_vector.cc
-    ipm/ipx/src/info.cc
-    ipm/ipx/src/ipm.cc
-    ipm/ipx/src/ipx_c.cc
-    ipm/ipx/src/iterate.cc
-    ipm/ipx/src/kkt_solver.cc
-    ipm/ipx/src/kkt_solver_basis.cc
-    ipm/ipx/src/kkt_solver_diag.cc
-    ipm/ipx/src/linear_operator.cc
-    ipm/ipx/src/lp_solver.cc
-    ipm/ipx/src/lu_factorization.cc
-    ipm/ipx/src/lu_update.cc
-    ipm/ipx/src/maxvolume.cc
-    ipm/ipx/src/model.cc
-    ipm/ipx/src/normal_matrix.cc
-    ipm/ipx/src/sparse_matrix.cc
-    ipm/ipx/src/sparse_utils.cc
-    ipm/ipx/src/splitted_normal_matrix.cc
-    ipm/ipx/src/starting_basis.cc
-    ipm/ipx/src/symbolic_invert.cc
-    ipm/ipx/src/timer.cc
-    ipm/ipx/src/utils.cc)
-endif()
-
 set(sources
     io/Filereader.cpp
     io/FilereaderLp.cpp
@@ -186,20 +115,23 @@ if (GAMS_FOUND)
     include_directories(${GAMS_ROOT}/apifiles/C/api)
 endif()
 
-if (IPX_ON)
-    set(headers ${headers} ipm/IpxWrapper.h ${basiclu_headers}
-        ${ipx_headers})
-    add_library(libbasiclu ${basiclu_sources})
-    add_library(libipx ${ipx_sources})
-    target_link_libraries(libipx libbasiclu)
-else ()
-    set(headers ${headers} ipm/IpxWrapperEmpty.h)
-endif()
-
 add_library(libhighs ${sources})
 
+set(targets "libhighs")
+
 if (IPX_ON)
-    target_link_libraries(libhighs libipx)
+    add_subdirectory(ipm)
+    target_link_libraries(libhighs libipm)
+    install(
+    TARGETS libipm
+    EXPORT highs-targets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    INCLUDES
+    DESTINATION include)
+
+    # Add library targets to the build-tree export set
+    export(TARGETS libipm FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
 endif()
 
 if(${BUILD_SHARED_LIBS})
@@ -218,15 +150,6 @@ endif()
 set_target_properties(libhighs PROPERTIES
     OUTPUT_NAME "highs"
     MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-if (IPX_ON)
-    set_target_properties(libipx PROPERTIES
-        OUTPUT_NAME "ipx"
-        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    set_target_properties(libbasiclu PROPERTIES
-        OUTPUT_NAME "basiclu"
-        MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-endif()
 
 include(CheckLanguage)
 check_language("Fortran")
@@ -295,6 +218,7 @@ endif()
 set_target_properties(highs PROPERTIES INSTALL_RPATH
     "${CMAKE_INSTALL_PREFIX}/lib")
 
+
 # install the header files of highs
 foreach ( file ${headers} )
     get_filename_component( dir ${file} DIRECTORY )
@@ -302,16 +226,6 @@ foreach ( file ${headers} )
 endforeach()
 install(FILES ${HIGHS_BINARY_DIR}/HConfig.h DESTINATION include)
 
-if (IPX_ON)
-    install(TARGETS libhighs libipx libbasiclu EXPORT highs-targets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            INCLUDES DESTINATION include)
-
-    # Add library targets to the build-tree export set
-    export(TARGETS libhighs libipx libbasiclu
-    FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
-else()
     install(TARGETS libhighs EXPORT highs-targets
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
@@ -320,7 +234,6 @@ else()
     # Add library targets to the build-tree export set
     export(TARGETS libhighs 
     FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
-endif()
 
 
 # Configure the config file for the build tree:
@@ -349,3 +262,7 @@ install(FILES "${HIGHS_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/highs-config.cmake"
     DESTINATION lib/cmake/highs)
 install(FILES "${HIGHS_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/highs.pc" 
     DESTINATION lib/pkg-config)
+
+# *****************************************************
+# refactor of CMake: bazel build equivalence
+# 1. highs library

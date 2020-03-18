@@ -2,7 +2,7 @@
 # means, adding the subdirectories for all CMake projects in this tree, and
 # finding external libraries and turning them into imported targets.
 
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.15)
 
 project(HIGHS LANGUAGES CXX C)
 
@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_R
 find_package(PkgConfig)
 
 include(CPack)
-set(CPACK_RESOURCE_FILE_LICENSE "${HIGHS_SOURCE_DIR}/COPYING")
+set(CPACK_RESOURCE_FILE_LICENSE "${HIGHS_SOURCE_DIR}/LICENCE")
 set(CPACK_PACKAGE_VERSION_MAJOR "${HIGHS_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${HIGHS_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${HIGHS_VERSION_PATCH}")
@@ -145,7 +145,6 @@ if (OSI_FOUND)
     include_directories(${OSITEST_INCLUDE_DIRS})
 endif (OSI_FOUND)
 
-option(IPN_ON OFF)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" AND (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5))
     set(IPX_ON ON)
 endif()
@@ -196,8 +195,6 @@ include_directories(
     ${HIGHS_SOURCE_DIR}/external
     ${HIGHS_SOURCE_DIR}/src
     ${HIGHS_SOURCE_DIR}/src/io
-    ${HIGHS_SOURCE_DIR}/src/ipm/ipx
-    ${HIGHS_SOURCE_DIR}/src/ipm/basiclu
     ${HIGHS_SOURCE_DIR}/src/lp_data
     ${HIGHS_SOURCE_DIR}/src/mip
     ${HIGHS_SOURCE_DIR}/src/presolve
@@ -263,3 +260,10 @@ enable_testing()
 add_subdirectory(app)
 add_subdirectory(check)
 add_subdirectory(src)
+
+set(targets highs)
+if (IPX_ON)
+    set(targets highs libipm)
+endif()
+
+export(TARGETS ${targets} FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
