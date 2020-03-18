@@ -5,7 +5,6 @@ set(CATCH_INCLUDE_DIR ${HIGHS_SOURCE_DIR}/src/external/catch)
 add_library(Catch INTERFACE)
 target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
 target_include_directories(Catch INTERFACE ${HIGHS_SOURCE_DIR}/src)
-target_include_directories(Catch INTERFACE ${HIGHS_SOURCE_DIR}/src/lp_data)
 
 # Make test executable
 set(TEST_SOURCES

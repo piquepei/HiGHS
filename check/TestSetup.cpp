@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "HighsLp.h"
-#include "HighsStatus.h"
+#include "lp_data/HighsLp.h"
+#include "lp_data/HighsStatus.h"
 
 // No commas in test case name.
 TEST_CASE("correct-print-status", "[highs_data]") {

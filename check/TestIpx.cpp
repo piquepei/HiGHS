@@ -1,9 +1,9 @@
-#include "HighsStatus.h"
 #include "catch.hpp"
 #include "ipm/ipx/include/ipx_status.h"
 #include "ipm/ipx/src/lp_solver.h"
 #include "lp_data/HConst.h"
 #include "lp_data/HighsLp.h"
+#include "lp_data/HighsStatus.h"
 
 // No commas i// Copyright (c) 2018 ERGO-Code. See license.txt for license.
 //
@@ -65,8 +65,9 @@ TEST_CASE("afiro", "[highs_ipx]") {
   double ipx_col_value[num_var], ipx_row_value[num_constr];
   double ipx_row_dual[num_constr], ipx_col_dual[num_var];
   Int ipx_row_status[num_constr], ipx_col_status[num_var];
-  lps.GetBasicSolution(ipx_col_value, ipx_row_value, ipx_row_dual, ipx_col_dual, ipx_row_status, ipx_col_status);
-  REQUIRE(fabs(ipx_col_value[11]-339.9) < 1);
+  lps.GetBasicSolution(ipx_col_value, ipx_row_value, ipx_row_dual, ipx_col_dual,
+                       ipx_row_status, ipx_col_status);
+  REQUIRE(fabs(ipx_col_value[11] - 339.9) < 1);
 
-  (void)(info); //surpress unused variable.
+  (void)(info);  // surpress unused variable.
 }
