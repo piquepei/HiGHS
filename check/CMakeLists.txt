@@ -26,7 +26,9 @@ if (IPX_ON)
     set (TEST_SOURCES ${TEST_SOURCES} TestIpx.cpp)
 endif()
 
-add_executable(unit_tests ${TEST_SOURCES})
+add_executable(unit_tests)
+target_sources(unit_tests PRIVATE ${TEST_SOURCES})
+target_include_directories(unit_tests PRIVATE ${HIGHS_SOURCE_DIR}/external)
 target_link_libraries(unit_tests libhighs Catch)
 
 if (OSI_FOUND AND BUILD_TESTING)

@@ -1,5 +1,5 @@
 #include "Highs.h"
-#include "HighsRandom.h"
+#include "util/HighsRandom.h"
 
 #include "catch.hpp"
 

@@ -1,12 +1,12 @@
 #include <cstdio>
 
 //#include "FilereaderEms.h"
-#include "HMPSIO.h"
+#include "io/HMPSIO.h"
 //#include "HMpsFF.h"
 #include "Highs.h"
 //#include "HighsIO.h"
 //#include "HighsLp.h"
-#include "LoadOptions.h"
+#include "io/LoadOptions.h"
 #include "catch.hpp"
 
 TEST_CASE("internal-options", "[highs_options]") {

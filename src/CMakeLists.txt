@@ -119,17 +119,20 @@ add_library(libhighs ${sources})
 
 set(targets "libhighs")
 
+target_include_directories(libhighs
+   PUBLIC 
+   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+   $<INSTALL_INTERFACE:include>
+   PRIVATE
+     io
+     mip
+     presolve)
+
+
 if (IPX_ON)
     add_subdirectory(ipm)
     target_link_libraries(libhighs libipm)
-    install(
-    TARGETS libipm
-    EXPORT highs-targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    INCLUDES
-    DESTINATION include)
-
     # Add library targets to the build-tree export set
     export(TARGETS libipm FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
 endif()
@@ -226,14 +229,14 @@ foreach ( file ${headers} )
 endforeach()
 install(FILES ${HIGHS_BINARY_DIR}/HConfig.h DESTINATION include)
 
-    install(TARGETS libhighs EXPORT highs-targets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            INCLUDES DESTINATION include)
+install(TARGETS libhighs EXPORT highs-targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES DESTINATION include)
 
-    # Add library targets to the build-tree export set
-    export(TARGETS libhighs 
-    FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
+# Add library targets to the build-tree export set
+export(TARGETS libhighs 
+FILE "${HIGHS_BINARY_DIR}/highs-targets.cmake")
 
 
 # Configure the config file for the build tree:

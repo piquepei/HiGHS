@@ -12,12 +12,12 @@
  * @author Julian Hall, Ivet Galabova, Qi Huangfu and Michael Feldmeier
  */
 #include "Highs.h"
-#include "HighsIO.h"
-#include "HighsMipSolver.h"
-#include "HighsOptions.h"
-#include "HighsRuntimeOptions.h"
-#include "HighsTimer.h"
-#include "LoadProblem.h"
+#include "io/HighsIO.h"
+#include "mip/HighsMipSolver.h"
+#include "lp_data/HighsOptions.h"
+#include "lp_data/HighsRuntimeOptions.h"
+#include "util/HighsTimer.h"
+#include "io/LoadProblem.h"
 
 void printHighsVersionCopyright(FILE* output, const int message_level,
                                 const char* message = nullptr);

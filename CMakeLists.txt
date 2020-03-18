@@ -1,7 +1,3 @@
-# The top-level CMake file is there to bring all modules into scope. That
-# means, adding the subdirectories for all CMake projects in this tree, and
-# finding external libraries and turning them into imported targets.
-
 cmake_minimum_required(VERSION 3.15)
 
 project(HIGHS LANGUAGES CXX C)
@@ -42,13 +38,6 @@ message(STATUS "Git hash: " ${GITHASH})
 
 string(TIMESTAMP TODAY "%Y-%m-%d")
 message(STATUS "Compilation date: " ${TODAY})
-
-set(EXT_PRESOLVE_DIR "" CACHE STRING "Path to the external presolving library")
-if(EXT_PRESOLVE_DIR)
-    message(STATUS "External presolve: " ${EXT_PRESOLVE_DIR})
-    include_directories(${EXT_PRESOLVE_DIR}/src)
-    include_directories(${EXT_PRESOLVE_DIR}/external)
-endif()
 
 # whether to use OpenMP
 option(OPENMP "OpenMP" ON)
@@ -189,18 +178,6 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 configure_file(${HIGHS_SOURCE_DIR}/src/HConfig.h.in ${HIGHS_BINARY_DIR}/HConfig.h)
-include_directories(
-    ${HIGHS_BINARY_DIR}
-    ${HIGHS_SOURCE_DIR}/app
-    ${HIGHS_SOURCE_DIR}/external
-    ${HIGHS_SOURCE_DIR}/src
-    ${HIGHS_SOURCE_DIR}/src/io
-    ${HIGHS_SOURCE_DIR}/src/lp_data
-    ${HIGHS_SOURCE_DIR}/src/mip
-    ${HIGHS_SOURCE_DIR}/src/presolve
-    ${HIGHS_SOURCE_DIR}/src/simplex
-    ${HIGHS_SOURCE_DIR}/src/test
-    ${HIGHS_SOURCE_DIR}/src/util)
 
 # set the correct rpath for OS X
 set(CMAKE_MACOSX_RPATH ON)

@@ -1,7 +1,7 @@
 #include <cstdio>
 
-#include "FilereaderEms.h"
-#include "HMPSIO.h"
+#include "io/FilereaderEms.h"
+#include "io/HMPSIO.h"
 #include "Highs.h"
 #include "catch.hpp"
 

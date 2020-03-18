@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "HighsIO.h"
+#include "io/HighsIO.h"
 #include "catch.hpp"
 
 char printedmsg[100000];
