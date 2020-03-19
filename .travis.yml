@@ -122,6 +122,14 @@ matrix:
     - os: osx
       osx_image: xcode11
 
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake-data
+      - cmake
+
 before_install:
     - eval "${MATRIX_EVAL}"
     #- sudo apt-get install gfortran
