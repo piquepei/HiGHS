@@ -16,12 +16,9 @@ file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
 if(EXISTS "${LOC_PATH}")
   message(
     FATAL_ERROR
-      "HiGHS does not allow build in a source directory.\
-      Please make a build subdirectory.
-      Feel free to remove the following files: \
-        rm CMakeCache.txt CPack*.cmake highs-*.cmake *.tcl HConfig.h\
-      and directory:/
-        rm -r CMakeFiles"
+      "HiGHS does not allow build in a source directory.
+Please make a build subdirectory.
+Feel free to remove CMakeCache.txt and CMakeFiles/")
 endif()
 
 find_package(PkgConfig)
