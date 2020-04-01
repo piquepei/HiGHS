@@ -1,29 +1,39 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Build HiGHS with CMake. 
-#-----------------------
+# Build HiGHS with CMake.
+# -----------------------
 
-project(HIGHS LANGUAGES CXX C)
+project(
+  HIGHS
+  VERSION 1.0
+  DESCRIPTION "High performance software for linear optimization")
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(HIGHS_VERSION_MAJOR 1)
-set(HIGHS_VERSION_MINOR 0)
-set(HIGHS_VERSION_PATCH 0)
-
-set(CMAKE_C_FLAGS_RELWITHDEBINFO
-    "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-    "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE}")
+# Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+  message(
+    FATAL_ERROR
+      "HiGHS does not allow build in a source directory.\
+      Please make a build subdirectory.
+      Feel free to remove the following files: \
+        rm CMakeCache.txt CPack*.cmake highs-*.cmake *.tcl HConfig.h\
+      and directory:/
+        rm -r CMakeFiles"
+endif()
 
 find_package(PkgConfig)
 
-# Use CPack for
+# Use CPack
 include(CPack)
+# This module will include any runtime libraries that are needed by the project
+# for the current platform: include(InstallRequiredSystemLibraries)
+
 set(CPACK_RESOURCE_FILE_LICENSE "${HIGHS_SOURCE_DIR}/LICENCE")
 set(CPACK_PACKAGE_VERSION_MAJOR "${HIGHS_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${HIGHS_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${HIGHS_VERSION_PATCH}")
 set(CPACK_PACKAGE_VENDOR "University of Edinburgh")
 
 option(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS "Export all symbols into the DLL" ON)
@@ -60,8 +70,7 @@ message(STATUS "OpenMP: " ${OPENMP})
 # For the moment keep above coverage part in case we are testing at CI.
 option(CI "CI extended tests" ON)
 
-# Coverage part
-# 'make coverage' to start the coverage process
+# Coverage part 'make coverage' to start the coverage process
 option(HIGHS_COVERAGE "Activate the code coverage compilation" OFF)
 if(HIGHS_COVERAGE)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -71,11 +80,13 @@ if(HIGHS_COVERAGE)
   endif()
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_C_FLAGS_DEBUG
-        "${CMAKE_C_FLAGS_DEBUG}   -fprofile-arcs -ftest-coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version='408*'"
-    )
+        "${CMAKE_C_FLAGS_DEBUG}   -fprofile-arcs -ftest-coverage -Xclang \
+        -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data \
+        -Xclang -coverage-version='408*'")
     set(CMAKE_CXX_FLAGS_DEBUG
-        "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version='408*'"
-    )
+        "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage -Xclang \
+        -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data \
+        -Xclang -coverage-version='408*'")
   endif()
 endif()
 
@@ -114,31 +125,52 @@ if(HIGHS_COVERAGE)
   endif()
 
   # Capturing lcov counters and generating report
-  if (NOT CI)
-    add_custom_target(coverage
-                    COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
-                    COMMAND ${LCOV_PATH} --capture --initial --directory ${CMAKE_BINARY_DIR}/bin --output-file ${CMAKE_BINARY_DIR}/coverage.info
-                    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ${CMAKE_CTEST_COMMAND} -LE "(LONG|FAIL)" || true
-                    COMMAND ${LCOV_PATH} --capture --directory ${CMAKE_BINARY_DIR}/bin --directory ${CMAKE_BINARY_DIR}/src --directory ${CMAKE_BINARY_DIR}/app --directory ${CMAKE_BINARY_DIR}/check --output-file ${CMAKE_BINARY_DIR}/coverage.info
-                    COMMAND ${LCOV_PATH} --remove "*/usr/include/*" --output-file ${CMAKE_BINARY_DIR}/coverage.info.cleaned
-                    COMMAND ${GENHTML_PATH} -o ${CMAKE_BINARY_DIR}/coverage ${CMAKE_BINARY_DIR}/coverage.info.cleaned
-                    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/coverage.info.cleaned
-            VERBATIM
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Resetting code coverage counters to zero.
+  if(NOT CI)
+    add_custom_target(
+      coverage
+      COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
+      COMMAND
+        ${LCOV_PATH} --capture --initial --directory ${CMAKE_BINARY_DIR}/bin
+        --output-file ${CMAKE_BINARY_DIR}/coverage.info
+      COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}
+              ${CMAKE_CTEST_COMMAND} -LE "(LONG|FAIL)" || true
+      COMMAND
+        ${LCOV_PATH} --capture --directory ${CMAKE_BINARY_DIR}/bin --directory
+        ${CMAKE_BINARY_DIR}/src --directory ${CMAKE_BINARY_DIR}/app --directory
+        ${CMAKE_BINARY_DIR}/check --output-file
+        ${CMAKE_BINARY_DIR}/coverage.info
+      COMMAND ${LCOV_PATH} --remove "*/usr/include/*" --output-file
+              ${CMAKE_BINARY_DIR}/coverage.info.cleaned
+      COMMAND ${GENHTML_PATH} -o ${CMAKE_BINARY_DIR}/coverage
+              ${CMAKE_BINARY_DIR}/coverage.info.cleaned
+      COMMAND ${CMAKE_COMMAND} -E remove
+              ${CMAKE_BINARY_DIR}/coverage.info.cleaned
+      VERBATIM
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      COMMENT
+        "Resetting code coverage counters to zero.
     Processing code coverage counters and generating report.
-    You can zip the directory ${CMAKE_BINARY_DIR}/coverage and upload the content to a web server.")
+    You can zip the directory ${CMAKE_BINARY_DIR}/coverage and upload the \
+    content to a web server.")
   else()
-    add_custom_target(ci_cov
-                    COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
-                    COMMAND ${LCOV_PATH} --capture --initial --directory ${CMAKE_BINARY_DIR}/bin --output-file ${CMAKE_BINARY_DIR}/coverage.info
-                    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ${CMAKE_CTEST_COMMAND} -LE "(LONG|FAIL)" || true
-                    COMMAND ${LCOV_PATH} --capture --directory ${CMAKE_BINARY_DIR}/bin --directory ${CMAKE_BINARY_DIR}/src --directory ${CMAKE_BINARY_DIR}/app --directory ${CMAKE_BINARY_DIR}/check --output-file ${CMAKE_BINARY_DIR}/coverage.info
-		    VERBATIM
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Resetting code coverage counters to zero.")
+    add_custom_target(
+      ci_cov
+      COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
+      COMMAND
+        ${LCOV_PATH} --capture --initial --directory ${CMAKE_BINARY_DIR}/bin
+        --output-file ${CMAKE_BINARY_DIR}/coverage.info
+      COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}
+              ${CMAKE_CTEST_COMMAND} -LE "(LONG|FAIL)" || true
+      COMMAND
+        ${LCOV_PATH} --capture --directory ${CMAKE_BINARY_DIR}/bin --directory
+        ${CMAKE_BINARY_DIR}/src --directory ${CMAKE_BINARY_DIR}/app --directory
+        ${CMAKE_BINARY_DIR}/check --output-file
+        ${CMAKE_BINARY_DIR}/coverage.info
+      VERBATIM
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      COMMENT "Resetting code coverage counters to zero.")
   endif()
-endif ()
+endif()
 
 option(SCIP_DEV "SCIP  development" OFF)
 if(NOT (${SCIP_DEV} STREQUAL "OFF"))
@@ -235,31 +267,6 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-# Function to set compiler flags on and off easily.
-include(CheckCXXCompilerFlag)
-function(enable_cxx_compiler_flag_if_supported flag)
-  string(FIND "${CMAKE_CXX_FLAGS}" "${flag}" flag_already_set)
-  if(flag_already_set EQUAL -1)
-    check_cxx_compiler_flag("${flag}" flag_supported)
-    if(flag_supported)
-      set(CMAKE_CXX_FLAGS
-          "${CMAKE_CXX_FLAGS} ${flag}"
-          PARENT_SCOPE)
-    endif()
-    unset(flag_supported CACHE)
-  endif()
-endfunction()
-
-# usage: turn pedantic on for even more warnings.
-enable_cxx_compiler_flag_if_supported("-Wall")
-enable_cxx_compiler_flag_if_supported("-Wextra")
-enable_cxx_compiler_flag_if_supported("-Wno-unused-parameter")
-enable_cxx_compiler_flag_if_supported("-pedantic")
-
-if(CMAKE_BUILD_TYPE STREQUAL Debug OR CMAKE_BUILD_TYPE STREQUAL debug)
-  enable_cxx_compiler_flag_if_supported("-D_GLIBCXX_DEBUG")
-endif()
-
 if(IPX_ON)
   # use, i.e. don't skip the full RPATH for the build tree
   set(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -269,6 +276,12 @@ if(IPX_ON)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  highs-config-version.cmake
+  VERSION ${PACKAGE_VERSION}
+  COMPATIBILITY AnyNewerVersion)
 
 # Targets
 enable_testing()

@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
 void printHighsVersionCopyright(FILE* output, const int message_level,
                                 const char* message) {
   HighsPrintMessage(output, message_level, ML_ALWAYS,
-                    "Running HiGHS %d.%d.%d [date: %s, git hash: %s]\n",
+                    "Running HiGHS %d.%d [date: %s, git hash: %s]\n",
                     HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR,
-                    HIGHS_VERSION_PATCH, HIGHS_COMPILATION_DATE, HIGHS_GITHASH);
+                    HIGHS_COMPILATION_DATE, HIGHS_GITHASH);
   HighsPrintMessage(output, message_level, ML_ALWAYS,
                     "Copyright (c) 2020 ERGO-Code under MIT licence terms\n\n");
 #ifdef HiGHSDEV

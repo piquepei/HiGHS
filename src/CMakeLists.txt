@@ -118,6 +118,26 @@ target_include_directories(
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
          $<INSTALL_INTERFACE:include>)
 
+target_compile_options(
+  libhighs
+  PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+          -pipe
+          -march=native
+          $<$<CONFIG:Debug>:-O0
+          -Wall
+          -Wextra
+          -pedantic
+          -Wno-unused-parameter>>
+          $<$<CXX_COMPILER_ID:MSVC>:
+          $<$<CONFIG:Debug>:/Od
+          /Wall
+          /Zi>>)
+
+set_target_properties(
+  libhighs
+  PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(IPX_ON)
   add_subdirectory(ipm)
   target_link_libraries(libhighs libipm)
@@ -128,11 +148,7 @@ endif()
 if(${BUILD_SHARED_LIBS})
   # put version information into shared library file
   set_target_properties(
-    libhighs
-    PROPERTIES
-      VERSION
-      ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR}.${HIGHS_VERSION_PATCH}
-      SOVERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR})
+    libhighs PROPERTIES VERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR})
 else()
   # create static highs library with pic
   set_target_properties(libhighs PROPERTIES POSITION_INDEPENDENT_CODE on)
@@ -186,10 +202,8 @@ if(OSI_FOUND)
   if(${BUILD_SHARED_LIBS})
     set_target_properties(
       OsiHighs
-      PROPERTIES
-        VERSION
-        ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR}.${HIGHS_VERSION_PATCH}
-        SOVERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR})
+      PROPERTIES VERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR}
+                 SOVERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR})
   else()
     set_target_properties(OsiHighs PROPERTIES POSITION_INDEPENDENT_CODE on)
   endif()
