@@ -22,8 +22,6 @@ set(sources
     lp_data/HighsOptions.cpp
     mip/HighsMipSolver.cpp
     mip/SolveMip.cpp
-    presolve/ICrash.cpp
-    presolve/ICrashUtil.cpp
     presolve/Presolve.cpp
     presolve/PresolveAnalysis.cpp
     presolve/HPreData.cpp
@@ -91,8 +89,6 @@ set(headers
     # simplex/HRanging.h
     simplex/HSimplex.h
     simplex/SimplexConst.h
-    presolve/ICrash.h
-    presolve/ICrashUtil.h
     presolve/Presolve.h
     presolve/PresolveAnalysis.h
     presolve/HPreData.h
