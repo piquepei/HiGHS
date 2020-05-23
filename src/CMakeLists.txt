@@ -403,7 +403,7 @@ target_sources(libhighs PRIVATE
     util/HighsSort.cpp
     util/HighsUtils.cpp
     util/stringutil.cpp
-    interfaces/highs_c_api.cpp)
+    interfaces/highs_api.cpp)
 
 target_include_directories(libhighs PUBLIC . ipm/ io/ lp_data/ mip/ simplex/ 
                            presolve/ util/ test/ interfaces/ ../external/)
