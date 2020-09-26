@@ -359,18 +359,18 @@ int Presolve::presolve(int print) {
 
   int iter = 1;
 
-  // removeFixed();
+  removeFixed();
   if (status) return status;
 
   if (order.size() == 0) {
     // pre_release_order:
-    // order.push_back(Presolver::kMainRowSingletons);
-    // order.push_back(Presolver::kMainForcing);
-    // order.push_back(Presolver::kMainRowSingletons);
-    // order.push_back(Presolver::kMainDoubletonEq);
-    // order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainDoubletonEq);
+    order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainColSingletons);
-    // order.push_back(Presolver::kMainDominatedCols);
+    order.push_back(Presolver::kMainDominatedCols);
     // // order.push_back(Presolver::kMainSingletonsOnly);
   }
 
@@ -1804,31 +1804,31 @@ void Presolve::removeColumnSingletons() {
         continue;
       }
 
-      // // free
-      // if (colLower.at(col) <= -HIGHS_CONST_INF &&
-      //     colUpper.at(col) >= HIGHS_CONST_INF) {
-      //   removeFreeColumnSingleton(col, i, k);
-      //   it = singCol.erase(it);
-      //   continue;
-      // }
+      // free
+      if (colLower.at(col) <= -HIGHS_CONST_INF &&
+          colUpper.at(col) >= HIGHS_CONST_INF) {
+        removeFreeColumnSingleton(col, i, k);
+        it = singCol.erase(it);
+        continue;
+      }
 
-      // // implied free
-      // const bool result = removeIfImpliedFree(col, i, k);
-      // if (result) {
-      //   it = singCol.erase(it);
-      //   continue;
-      // }
+      // implied free
+      const bool result = removeIfImpliedFree(col, i, k);
+      if (result) {
+        it = singCol.erase(it);
+        continue;
+      }
 
-      // // singleton column in a doubleton inequality
-      // // case two column singletons
-      // if (nzRow.at(i) == 2) {
-      //   const bool result_di =
-      //       removeColumnSingletonInDoubletonInequality(col, i, k);
-      //   if (result_di) {
-      //     it = singCol.erase(it);
-      //     continue;
-      //   }
-      // }
+      // singleton column in a doubleton inequality
+      // case two column singletons
+      if (nzRow.at(i) == 2) {
+        const bool result_di =
+            removeColumnSingletonInDoubletonInequality(col, i, k);
+        if (result_di) {
+          it = singCol.erase(it);
+          continue;
+        }
+      }
       it++;
 
       if (status) return;
