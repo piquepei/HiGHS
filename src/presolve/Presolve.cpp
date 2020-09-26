@@ -1702,6 +1702,21 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
   assert(fabs(cost) < tol);
   assert(nzCol[col] == 1);
 
+  int second = -1;
+  for (int k = ARstart[row]; k < ARstart[row + 1]; k++) {
+    const int column = ARindex[k];
+    if (flagCol[column] && column != col) {
+      if (second == -1) {
+        second = column;
+        break;
+      }
+    }
+  }
+  if (second == -1)
+    std::cout << "Presolve Error: no second variable in row." << std::endl;
+
+  if (nzCol[second] == 1) return;
+
   if (iPrint) {
     std::cout << "Zero cost column singleton: col = " << col << ", row " << row
               << ", coeff = " << aik << ", cost = " << colCost[col]
@@ -1746,19 +1761,6 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
   postValue.push(colUpper[col]);
   postValue.push(colLower[col]);
   postValue.push(aik);
-
-  int second = -1;
-  for (int k = ARstart[row]; k < ARstart[row + 1]; k++) {
-    const int column = ARindex[k];
-    if (flagCol[column] && column != col) {
-      if (second == -1) {
-        second = column;
-        break;
-      }
-    }
-  }
-  if (second == -1)
-    std::cout << "Presolve Error: no second variable in row." << std::endl;
 
   postValue.push(second);
 
