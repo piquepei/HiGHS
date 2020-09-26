@@ -98,12 +98,12 @@ class Presolve : public HPreData {
     timer.time_limit = limit;
   }
 
-  int iPrint = 0;
+  int iPrint = 1;
   int message_level;
   FILE* output;
 
  private:
-  int iKKTcheck = 0;
+  int iKKTcheck = 1;
   int presolve(int print);
 
   const bool report_postsolve = false;
@@ -207,7 +207,8 @@ class Presolve : public HPreData {
   void removeColumnSingletons();
   bool removeIfImpliedFree(int col, int i, int k);
   void removeFreeColumnSingleton(const int col, const int row, const int k);
-  void removeZeroCostColumnSingleton(const int col, const int row, const int k);
+  void removeZeroCostColumnSingleton(const int col, const int row,
+                                     const double aik);
   bool removeColumnSingletonInDoubletonInequality(const int col, const int i,
                                                   const int k);
   void removeSecondColumnSingletonInDoubletonRow(const int j, const int i);

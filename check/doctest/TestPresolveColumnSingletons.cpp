@@ -49,6 +49,13 @@ HighsStatus zeroCostColSing() {
   assert(status == HighsStatus::OK);
 
   status = highs.run();
+  int rows, cols, nz;
+  highs.getPresolveReductionCounts(rows,cols,nz);
+
+  //bool empty = rows > 0 && cols > 0 && nz == 0;
+  bool empty = cols > 0;
+
+  CHECK(empty);
   return status;
 }
 
