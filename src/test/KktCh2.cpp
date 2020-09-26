@@ -66,6 +66,7 @@ void KktChStep::addCost(int col, double value) { RcolCost[col] = value; }
 2 FORCING_ROW_VARIABLE
 16 REDUNDANT_ROW
 
+20 ZERO_COST_COL_SING
 */
 void KktChStep::addChange(int type, int row, int col, double valC, double dualC,
                           double dualR) {
@@ -74,6 +75,20 @@ void KktChStep::addChange(int type, int row, int col, double valC, double dualC,
   vector<pair<int, double>> upd;
 
   switch (type) {
+    case 20:  // zero cost col sing
+      upd = rLowers.top();
+      rLowers.pop();
+      for (size_t i = 0; i < upd.size(); i++) {
+        int ind = get<0>(upd[i]);
+        RrowLower[ind] = get<1>(upd[i]);
+      }
+      upd = rUppers.top();
+      rUppers.pop();
+      for (size_t i = 0; i < upd.size(); i++) {
+        int ind = get<0>(upd[i]);
+        RrowUpper[ind] = get<1>(upd[i]);
+      }
+      break;
     case 171:  // new bounds from doubleton equation, retrieve old ones
       upd = rLowers.top();
       rLowers.pop();

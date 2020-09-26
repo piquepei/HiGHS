@@ -1697,10 +1697,10 @@ void Presolve::removeSecondColumnSingletonInDoubletonRow(const int j,
 }
 
 void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
-                                              const double aik) {
+                                             const double aik) {
   const double cost = colCost[col];
   assert(fabs(cost) < tol);
-  assert(nzCol[col]==1);
+  assert(nzCol[col] == 1);
 
   if (iPrint) {
     std::cout << "Zero cost column singleton: col = " << col << ", row " << row
@@ -1717,7 +1717,7 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
     if (colLower[col] > -HIGHS_CONST_INF) {
       Ur = rowUpper[row] - aik * colLower[col];
     }
-    if (colUpper[col] <  HIGHS_CONST_INF) {
+    if (colUpper[col] < HIGHS_CONST_INF) {
       Lr = rowLower[row] - aik * colUpper[col];
     }
   }
@@ -1725,7 +1725,7 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
     if (colLower[col] > -HIGHS_CONST_INF) {
       Lr = rowLower[row] - aik * colLower[col];
     }
-    if (colUpper[col] <  HIGHS_CONST_INF) {
+    if (colUpper[col] < HIGHS_CONST_INF) {
       Ur = rowUpper[row] - aik * colUpper[col];
     }
   }
@@ -1740,7 +1740,7 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
     chk2.rUppers.push(bndsU);
   }
 
-  vector<double> bnds({rowLower.at(row), rowLower.at(row)});
+  vector<double> bnds({rowLower.at(row), rowUpper.at(row)});
   oldBounds.push(make_pair(row, bnds));
 
   addChange(PresolveRule::ZERO_COST_COL_SING, row, col);
@@ -2794,7 +2794,83 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
     setBasisElement(c);
     switch (c.type) {
       case ZERO_COST_COL_SING: {
+        pair<int, vector<double>> p = oldBounds.top();
+        oldBounds.pop();
+        assert(p.first == c.row);
+        const int j = p.first;
+        vector<double> v = p.second;
+        assert((int)v.size() == 2);
+        double rowLbOld = v[0];
+        double rowUbOld = v[1];
 
+        // No new row so no changes to basis here.
+        // may trigger a previously undetected bug elsewhere, watch out.
+
+        // Primal postsolve.
+        double aik = (int)postValue.top();
+        postValue.pop();
+
+        double rv = 0;
+        for (int k = ARstart.at(c.row); k < ARstart[c.row + 1]; ++k)
+          if (flagCol.at(ARindex.at(k)))
+            rv = rv + valuePrimal.at(ARindex.at(k)) * ARvalue.at(k);
+
+        double valueX;
+        if (colLower[c.col] > 0)
+          valueX = colLower[c.col];
+        else if (colUpper[c.col] < 0)
+          valueX = colUpper[c.col];
+        else {
+          assert(colLower[c.col] <= 0 && colUpper[c.col] >= 0);
+          valueX = 0;
+        }
+
+        // Try this value.
+        double newrv = rv + aik * valueX;
+        if (newrv <= rowUbOld && newrv >= rowLbOld) {
+          // OK.
+        } else if (newrv < rowLbOld) {
+          // try to set to rowLb
+          // if column is primal infeasible trim
+          double term = rowLbOld - rv;
+          valueX = term / aik;
+          if (valueX >= colLower[c.col] && valueX <= colUpper[c.col]) {
+            // OK.
+          } else if (valueX < colLower[c.col]) {
+            valueX = colLower[c.col];
+          } else {
+            // if (valueX > colUpper[c.col])
+            valueX = colUpper[c.col];
+          }
+        } else if (newrv > rowUbOld) {
+          // try to set to rowUb
+          // if column is primal infeasible trim
+          double term = rowUbOld - rv;
+          valueX = term / aik;
+          if (valueX >= colLower[c.col] && valueX <= colUpper[c.col]) {
+            // OK.
+          } else if (valueX < colLower[c.col]) {
+            valueX = colLower[c.col];
+          } else {
+            valueX = colUpper[c.col];
+          }
+        }
+
+        // Dual postsolve.
+        // zj = aik yi
+        valueColDual[c.col] = aik * valueRowDual[c.row];
+
+        flagCol[c.col] = true;
+
+        if (iKKTcheck == 1) {
+          if (chk2.print == 1)
+            cout
+                << "----KKT check after zero cost col singleton re-introduced. Row: "
+                << c.row << ", column " << c.col << " -----\n";
+          chk2.addChange(20, c.row, c.col, valuePrimal[c.col],
+                         valueColDual[c.col], valueRowDual[c.row]);
+          checkKkt();
+        }
         break;
       }
       case TWO_COL_SING_TRIVIAL: {
