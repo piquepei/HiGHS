@@ -1796,7 +1796,7 @@ void Presolve::removeColumnSingletons() {
       const int i = Aindex.at(k);
 
       // zero cost
-      bool on_zero_cost = true;
+      bool on_zero_cost = false;
       on_zero_cost = on_zero_cost && (fabs(rowLower[i] - rowUpper[i]) < tol);
       on_zero_cost = on_zero_cost && nzRow[i] == 2;
       if (on_zero_cost && fabs(colCost.at(col)) < tol) {
