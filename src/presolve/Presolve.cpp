@@ -1743,10 +1743,34 @@ void Presolve::removeZeroCostColumnSingleton(const int col, const int row,
   vector<double> bnds({rowLower.at(row), rowUpper.at(row)});
   oldBounds.push(make_pair(row, bnds));
 
+  postValue.push(colUpper[col]);
+  postValue.push(colLower[col]);
+  postValue.push(aik);
+
+  int second = -1;
+  for (int k = ARstart[row]; k < ARstart[row + 1]; k++) {
+    const int column = ARindex[k];
+    if (flagCol[column] && column != col) {
+      if (second == -1) {
+        second = column;
+        break;
+      }
+    }
+  }
+  if (second == -1)
+    std::cout << "Presolve Error: no second variable in row." << std::endl;
+
+  postValue.push(second);
+
+  // update row bounds
+  if (rowLower[row] < Lr) rowLower[row] = Lr;
+  if (rowUpper[row] > Ur) rowUpper[row] = Ur;
+
   addChange(PresolveRule::ZERO_COST_COL_SING, row, col);
 
   flagCol[col] = 0;
   nzCol[col]--;
+  nzRow[row]--;
 }
 
 void Presolve::removeColumnSingletons() {
@@ -1771,6 +1795,8 @@ void Presolve::removeColumnSingletons() {
 
       // zero cost
       bool on_zero_cost = true;
+      on_zero_cost = on_zero_cost && (fabs(rowLower[i] - rowUpper[i]) < tol);
+      on_zero_cost = on_zero_cost && nzRow[i] == 2;
       if (on_zero_cost && fabs(colCost.at(col)) < tol) {
         const double aik = Avalue.at(k);
         removeZeroCostColumnSingleton(col, i, aik);
@@ -2807,7 +2833,17 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
         // may trigger a previously undetected bug elsewhere, watch out.
 
         // Primal postsolve.
-        double aik = (int)postValue.top();
+        int second = (int) postValue.top();
+        postValue.pop();
+
+        double aik = postValue.top();
+        assert(aik != 0);
+        postValue.pop();
+
+        // to check pop bounds too
+        double collower = postValue.top();
+        postValue.pop();
+        double colupper = postValue.top();
         postValue.pop();
 
         double rv = 0;
@@ -2815,58 +2851,39 @@ HighsPostsolveStatus Presolve::postsolve(const HighsSolution& reduced_solution,
           if (flagCol.at(ARindex.at(k)))
             rv = rv + valuePrimal.at(ARindex.at(k)) * ARvalue.at(k);
 
-        double valueX;
-        if (colLower[c.col] > 0)
-          valueX = colLower[c.col];
-        else if (colUpper[c.col] < 0)
-          valueX = colUpper[c.col];
-        else {
-          assert(colLower[c.col] <= 0 && colUpper[c.col] >= 0);
-          valueX = 0;
-        }
+        assert(rowLowerAtEl[c.row] == rowLbOld);
+        assert(rowUpperAtEl[c.row] == rowUbOld);
 
-        // Try this value.
-        double newrv = rv + aik * valueX;
-        if (newrv <= rowUbOld && newrv >= rowLbOld) {
-          // OK.
-        } else if (newrv < rowLbOld) {
-          // try to set to rowLb
-          // if column is primal infeasible trim
-          double term = rowLbOld - rv;
-          valueX = term / aik;
-          if (valueX >= colLower[c.col] && valueX <= colUpper[c.col]) {
-            // OK.
-          } else if (valueX < colLower[c.col]) {
-            valueX = colLower[c.col];
-          } else {
-            // if (valueX > colUpper[c.col])
-            valueX = colUpper[c.col];
-          }
-        } else if (newrv > rowUbOld) {
-          // try to set to rowUb
-          // if column is primal infeasible trim
-          double term = rowUbOld - rv;
-          valueX = term / aik;
-          if (valueX >= colLower[c.col] && valueX <= colUpper[c.col]) {
-            // OK.
-          } else if (valueX < colLower[c.col]) {
-            valueX = colLower[c.col];
-          } else {
-            valueX = colUpper[c.col];
-          }
-        }
+        // // First do special case: equality constraint only.
+        double valueX = (rowLbOld - rv) / aik;
 
         // Dual postsolve.
         // zj = aik yi
-        valueColDual[c.col] = aik * valueRowDual[c.row];
+        double dual = aik * valueRowDual[c.row];
+        valueColDual[c.col] = dual;
+        assert(dual == getColumnDualPost(c.col));
 
-        flagCol[c.col] = true;
+        // // First attempt to transfer dual to second column.
+        // // ..
+        // if ((dual < 0 && valueX != colupper) || (dual > 0 && valueX != collower)) {
+        //   // column dual needs to become zero since column is off bound
+        //   dual = 0;
+        //   valueColDual[c.col] = dual;
+        //   valueRowDual[c.row] = getRowDualPost(c.row, c.col);
+        //   // find other column
+        //   valueColDual[second] = getColumnDualPost(second);
+        // }
+
+        valuePrimal[c.col] = valueX;
+        valueColDual[c.col] = dual;
+
+        flagCol[c.col] = 1;
 
         if (iKKTcheck == 1) {
           if (chk2.print == 1)
-            cout
-                << "----KKT check after zero cost col singleton re-introduced. Row: "
-                << c.row << ", column " << c.col << " -----\n";
+            cout << "----KKT check after zero cost col singleton "
+                    "re-introduced. Row: "
+                 << c.row << ", column " << c.col << " -----\n";
           chk2.addChange(20, c.row, c.col, valuePrimal[c.col],
                          valueColDual[c.col], valueRowDual[c.row]);
           checkKkt();

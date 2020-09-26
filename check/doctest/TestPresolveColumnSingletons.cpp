@@ -16,6 +16,49 @@ TEST_CASE("testing the factorial function") {
 // - col sing doubleton inequality 
 // - test zero cost col sing
 
+// test zero cost col sing Equality
+HighsStatus zeroCostColSingEq() {
+  HighsLp lp;
+  lp.numCol_ = 2;
+  lp.numRow_ = 1;
+
+  lp.Astart_.push_back(0);
+  lp.Astart_.push_back(1);
+  lp.Astart_.push_back(2);
+
+  lp.Aindex_.push_back(0);
+  lp.Avalue_.push_back(0.5);
+
+  lp.Aindex_.push_back(0);
+  lp.Avalue_.push_back(0.5);
+
+  lp.colLower_.push_back(0);
+  lp.colUpper_.push_back(1);
+  
+  lp.colLower_.push_back(0);
+  lp.colUpper_.push_back(1);
+
+  lp.rowLower_.push_back(0.1);
+  lp.rowUpper_.push_back(0.1);
+
+  lp.colCost_.push_back(0);
+  lp.colCost_.push_back(1);
+
+  Highs highs;
+  HighsStatus status = highs.passModel(lp);
+  assert(status == HighsStatus::OK);
+
+  status = highs.run();
+  int rows, cols, nz;
+  highs.getPresolveReductionCounts(rows,cols,nz);
+
+  //bool empty = rows > 0 && cols > 0 && nz == 0;
+  bool empty = cols > 0;
+
+  CHECK(empty); 
+  return status;
+}
+
 // test zero cost col sing
 HighsStatus zeroCostColSing() {
   HighsLp lp;
@@ -55,7 +98,8 @@ HighsStatus zeroCostColSing() {
   //bool empty = rows > 0 && cols > 0 && nz == 0;
   bool empty = cols > 0;
 
-  CHECK(empty);
+  // this is the more general case. start with equality constraint first.
+  // CHECK(empty); 
   return status;
 }
 
@@ -241,6 +285,14 @@ HighsStatus twoColSingDoubletonInequality()
   highs.run();
   status = highs.run();
   return status;
+}
+
+// No commas in test case name.
+TEST_CASE("zero-eq") {
+  std::cout << "Presolve 0." << std::endl;
+  HighsStatus status = zeroCostColSingEq();
+  std::string str = HighsStatusToString(status);
+  CHECK(str == "OK");
 }
 
 // No commas in test case name.
