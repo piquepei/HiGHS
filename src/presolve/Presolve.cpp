@@ -261,15 +261,18 @@ int Presolve::runPresolvers(const std::vector<Presolver>& order) {
   checkBoundsAreConsistent();
   if (status) return status;
 
-  if (iPrint) std::cout << "----> fixed cols" << std::endl;
+  //bool iprint = 1;
+  bool iprint = iPrint;
+
+  if (iprint) std::cout << "----> fixed cols" << std::endl;
 
 
   for (Presolver main_loop_presolver : order) {
     double time_start = timer.timer_.readRunHighsClock();
-    if (iPrint) std::cout << "----> ";
+    if (iprint) std::cout << "----> ";
     auto it = kPresolverNames.find(main_loop_presolver);
     assert(it != kPresolverNames.end());
-    if (iPrint) std::cout << (*it).second << std::endl;
+    if (iprint) std::cout << (*it).second << std::endl;
 
     switch (main_loop_presolver) {
       case Presolver::kMainEmpty:
@@ -391,18 +394,23 @@ int Presolve::presolve(int print) {
     order.push_back(Presolver::kMainEmpty);
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainForcing);
+
+    order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainDominatedCols);
+    order.push_back(Presolver::kMainColSingletons);
+
     order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainDoubletonEq);
     order.push_back(Presolver::kMainRowSingletons);
-    order.push_back(Presolver::kMainColSingletons);
-    order.push_back(Presolver::kMainDominatedCols);
+
     // wip
     // order.push_back(Presolver::kMainSingletonsOnly);
   }
 
   int prev_cols_rows = 0;
   double prev_diff = 0;
-  // max_iterations = 10;
+  max_iterations = 10;
   // Else: The order has been modified for experiments
   while (hasChange == 1) {
     if (max_iterations > 0 && iter > max_iterations) break;
