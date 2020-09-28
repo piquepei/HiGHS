@@ -215,6 +215,7 @@ void Presolve::reportDevMidMainLoop() {
 }
 
 void Presolve::reportDevMainLoop() {
+  //if ( 0) {
   if (iPrint == 0) {
     if (timer.getTime() > 10)
       HighsPrintMessage(output, message_level, ML_VERBOSE,
@@ -261,7 +262,7 @@ int Presolve::runPresolvers(const std::vector<Presolver>& order) {
   checkBoundsAreConsistent();
   if (status) return status;
 
-  //bool iprint = 1;
+  // bool iprint = 1;
   bool iprint = iPrint;
 
   if (iprint) std::cout << "----> fixed cols" << std::endl;
@@ -313,7 +314,7 @@ int Presolve::runPresolvers(const std::vector<Presolver>& order) {
     }
 
     double time_end = timer.timer_.readRunHighsClock();
-    if (iPrint)
+    if (iprint)
       std::cout << (*it).second << " time: " << time_end - time_start
                 << std::endl;
     reportDevMidMainLoop();
@@ -393,11 +394,19 @@ int Presolve::presolve(int print) {
     // pre_release_order:
     order.push_back(Presolver::kMainEmpty);
     order.push_back(Presolver::kMainRowSingletons);
+
     order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainForcing);
 
     order.push_back(Presolver::kMainRowSingletons);
-    order.push_back(Presolver::kMainDominatedCols);
+    order.push_back(Presolver::kMainForcing);
+    order.push_back(Presolver::kMainRowSingletons);
+    order.push_back(Presolver::kMainForcing);
+
+    order.push_back(Presolver::kMainRowSingletons);
     order.push_back(Presolver::kMainColSingletons);
 
     order.push_back(Presolver::kMainRowSingletons);
