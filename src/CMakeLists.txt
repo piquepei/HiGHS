@@ -433,4 +433,8 @@ set_target_properties(libhighs PROPERTIES
     OUTPUT_NAME "highs"
     MACOSX_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
+# install the library
+install(TARGETS libhighs EXPORT highs-targets
+        RUNTIME DESTINATION lib)
+
 endif()
